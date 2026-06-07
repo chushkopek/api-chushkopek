@@ -4,10 +4,10 @@ API-only Next.js service for the Chushkopek hackathon demo.
 
 ## Routes
 
-- `POST /api/demo-crash`
-  - Receives the memory-leak threshold payload from the storefront.
-  - Sends a PagerDuty Events API v2 alert.
-  - Intentionally throws after PagerDuty accepts the alert so the demo shows a controlled server crash.
+- `POST /api/cart/activity`
+  - Receives normal cart activity from the storefront.
+  - Keeps recent order activity in process memory so the backend pod becomes unhealthy during the demo scenario.
+  - Terminates the Node.js process once the configured event limit is reached.
 - `POST /api/pagerduty-webhook?token=...`
   - Receives PagerDuty `incident.triggered` webhooks.
   - Calls the configured Twilio destination number.
@@ -27,6 +27,8 @@ TWILIO_API_KEY_SID
 TWILIO_API_KEY_SECRET
 TWILIO_FROM_NUMBER
 TEAMMATE_PHONE_NUMBER
+ORDER_ACTIVITY_EVENT_LIMIT
+ORDER_ACTIVITY_RETAINED_MIB
 ```
 
 For EU PagerDuty Events API v2 alerts:
@@ -42,6 +44,10 @@ https://test-hackathon-theta.vercel.app
 ```
 
 Do not commit real secrets, tokens, or phone numbers.
+
+`ORDER_ACTIVITY_EVENT_LIMIT` defaults to `5`.
+
+`ORDER_ACTIVITY_RETAINED_MIB` defaults to `64`.
 
 ## Local Development
 
