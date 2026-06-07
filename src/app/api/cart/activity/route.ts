@@ -26,6 +26,7 @@ type RetainedOrderActivity = {
 };
 
 const retainedOrderActivity: RetainedOrderActivity[] = [];
+const DEFAULT_MAX_RETAINED = 100;
 
 export function OPTIONS(request: Request) {
   return new Response(null, {
@@ -99,10 +100,20 @@ function retainCartActivity(body: CartActivityRequest) {
     quantity,
     bagCount,
     subtotal,
-    reserved: Buffer.alloc(retainedMiB * 1024 * 1024, fill),
+    // L1 suggested fix: keep a small diagnostic buffer instead of full MiB slab per event.
+    reserved: Buffer.alloc(Math.min(retainedMiB * 1024, 4096), fill),
   };
 
   retainedOrderActivity.push(activity);
+
+  const maxRetained = readEnvNumber(
+    "ORDER_ACTIVITY_MAX_RETAINED",
+    DEFAULT_MAX_RETAINED,
+  );
+  while (retainedOrderActivity.length > maxRetained) {
+    retainedOrderActivity.shift();
+  }
+
   return activity;
 }
 
